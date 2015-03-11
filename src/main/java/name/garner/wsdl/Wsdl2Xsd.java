@@ -22,8 +22,8 @@ import org.w3c.dom.ls.DOMImplementationLS;
 import org.w3c.dom.ls.LSSerializer;
 
 
-public class WsdlToXsdGenerator {
-	private static org.slf4j.Logger LOG = LoggerFactory.getLogger(WsdlToXsdGenerator.class);
+public class Wsdl2Xsd {
+	private static org.slf4j.Logger LOG = LoggerFactory.getLogger(Wsdl2Xsd.class);
 
 	public static void wsdlToXSD(InputStream is, OutputStream os) {
 		DocumentBuilder builder;
@@ -84,7 +84,7 @@ public class WsdlToXsdGenerator {
 
 	public static void main(String[] args) {
 		StringBuffer sb = new StringBuffer();
-		WsdlToXsdGenerator.wsdlToXSD(new FileInputStream(new File("ts.wsdl")),
+		Wsdl2Xsd.wsdlToXSD(new FileInputStream(new File("ts.wsdl")),
 				new WriterOutputStream(new StringWriter(sb)));
 		System.out.println(sb.toString());
 	}
