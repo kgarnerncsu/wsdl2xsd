@@ -1,13 +1,11 @@
 package name.garner.wsdl;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.logging.Logger;
+import java.io.Writer;
+import java.net.URL;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -21,25 +19,27 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.ls.DOMImplementationLS;
 import org.w3c.dom.ls.LSSerializer;
 
+import com.google.common.io.CharStreams;
 
 public class Wsdl2Xsd {
-	private static org.slf4j.Logger LOG = LoggerFactory.getLogger(Wsdl2Xsd.class);
+	private static org.slf4j.Logger LOG = LoggerFactory
+			.getLogger(Wsdl2Xsd.class);
 
-	public static void wsdlToXSD(InputStream is, OutputStream os) {
+	public static void wsdlToXSD(InputStream is, Writer writer) {
 		DocumentBuilder builder;
 		try {
 			builder = getDocBuilder();
 			Document wsdlDoc = builder.parse(is);
 			Document xsdDoc = getDocBuilder().newDocument();
 			populateXsdDoc(wsdlDoc, xsdDoc);
-			writeToStream(xsdDoc, os);
+			writeToStream(xsdDoc, writer);
 			is.close();
-			os.flush();
-			os.close();
+			writer.flush();
+			writer.close();
 		} catch (Exception e) {
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
-			logger.error(sw.toString());
+			LOG.error(sw.toString());
 		}
 	}
 
@@ -52,7 +52,7 @@ public class Wsdl2Xsd {
 		NodeList lst = node.getChildNodes();
 		for (int i = 0; i < lst.getLength(); i++) {
 			Node nd = lst.item(i);
-			if (nd.getNodeName().equals("xsd:schema")) {
+			if (nd.getNodeName().equals("s:schema")) {
 				NodeList xsdNodes = nd.getChildNodes();
 				for (int j = 0; j < xsdNodes.getLength(); j++) {
 					Node temp = xsdNodes.item(j);
@@ -63,16 +63,14 @@ public class Wsdl2Xsd {
 		}
 	}
 
-	private static void writeToStream(Document document, OutputStream os)
+	private static void writeToStream(Document document, Writer writer)
 			throws IOException {
 		DOMImplementationLS domImplementationLS = (DOMImplementationLS) document
 				.getImplementation();
 		LSSerializer lsSerializer = domImplementationLS.createLSSerializer();
 		String xsd = lsSerializer.writeToString(document);
-		PrintWriter pw = new PrintWriter(os);
-		// logger.debug(xsd);
-		pw.write(xsd);
-		pw.flush();
+		writer.write(xsd);
+		writer.flush();
 	}
 
 	private static DocumentBuilder getDocBuilder()
@@ -84,8 +82,13 @@ public class Wsdl2Xsd {
 
 	public static void main(String[] args) {
 		StringBuffer sb = new StringBuffer();
-		Wsdl2Xsd.wsdlToXSD(new FileInputStream(new File("ts.wsdl")),
-				new WriterOutputStream(new StringWriter(sb)));
+		try {
+			URL url = new URL(
+					"http://wsf.cdyne.com/WeatherWS/Weather.asmx?WSDL");
+			Wsdl2Xsd.wsdlToXSD(url.openStream(), CharStreams.asWriter(sb));
+		} catch (IOException ioe) {
+			LOG.error("Error", ioe);
+		}
 		System.out.println(sb.toString());
 	}
 }
