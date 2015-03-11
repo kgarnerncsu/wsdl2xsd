@@ -1,5 +1,6 @@
 package name.garner.wsdl;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -11,6 +12,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import jlibs.xml.sax.crawl.XMLCrawler;
+
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -18,8 +21,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.ls.DOMImplementationLS;
 import org.w3c.dom.ls.LSSerializer;
-
-import com.google.common.io.CharStreams;
+import org.xml.sax.InputSource;
 
 public class Wsdl2Xsd {
 	private static org.slf4j.Logger LOG = LoggerFactory
@@ -81,14 +83,21 @@ public class Wsdl2Xsd {
 	}
 
 	public static void main(String[] args) {
-		StringBuffer sb = new StringBuffer();
+//		StringBuffer sb = new StringBuffer();
 		try {
 			URL url = new URL(
 					"http://wsf.cdyne.com/WeatherWS/Weather.asmx?WSDL");
-			Wsdl2Xsd.wsdlToXSD(url.openStream(), CharStreams.asWriter(sb));
+			
+			XMLCrawler xmlCrawler = new XMLCrawler();
+			InputSource wsdl = new InputSource(url.openStream());
+			wsdl.setSystemId("http://wsf.cdyne.com/WeatherWS/Weather.asmx?WSDL");
+			File folder = new File("xsd");
+			xmlCrawler.crawlInto(wsdl, folder);
+
+//			Wsdl2Xsd.wsdlToXSD(url.openStream(), CharStreams.asWriter(sb));
 		} catch (IOException ioe) {
 			LOG.error("Error", ioe);
 		}
-		System.out.println(sb.toString());
+//		System.out.println(sb.toString());
 	}
 }
